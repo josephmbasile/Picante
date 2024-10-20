@@ -1,0 +1,89 @@
+static class SphereSolver
+{
+    public struct Point
+    {
+        public double x;
+        public double y;
+        public double z;
+
+        public Point(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public double component(int n)
+        {
+            switch (n)
+            {
+                case 0: return x;
+                case 1: return y;
+                case 2: return z;
+                default: throw new Exception();
+            }
+        }
+    };
+
+    public struct Sphere
+    {
+        public Point center;
+        public double radius;
+
+        public Sphere(Point center, double radius)
+        {
+            this.center = center;
+            this.radius = radius;
+        }
+    };
+
+    public static Sphere SphereFromFourPoints(Point a, Point b, Point c, Point d)
+    {
+        static double U(Point a, Point b, Point c, Point d, Point e, Point f, Point g, Point h)
+        {
+            return (a.z - b.z) * (c.x * d.y - d.x * c.y) - (e.z - f.z) * (g.x * h.y - h.x * g.y);
+        }
+        static double D(int x, int y, Point a, Point b, Point c)
+        {
+            return a.component(x) * (b.component(y) - c.component(y)) +
+                   b.component(x) * (c.component(y) - a.component(y)) +
+                   c.component(x) * (a.component(y) - b.component(y));
+        }
+
+        static double E(int x, int y, Point a, Point b, Point c, Point d, double ra, double rb, double rc, double rd, double uvw)
+        {
+            return ( ra * D(x, y, b, c, d) - rb * D(x, y, c, d, a) +
+                     rc * D(x, y, d, a, b) - rd * D(x, y, a, b, c) ) / uvw;
+        }
+
+        double u = U(a, b, c, d, b, c, d, a);
+        double v = U(c, d, a, b, d, a, b, c);
+        double w = U(a, c, d, b, b, d, a, c);
+        double uvw = 2 * (u + v + w);
+        if (uvw == 0.0)
+        {
+            // Oops.  The points are coplanar.
+            // You probably want to replace this with abs(uvw) < epsilon, with some epsilon appropriate for your project.
+        }
+
+        static double sq(Point p)
+        {
+            return p.x * p.x + p.y * p.y + p.z * p.z;
+        }
+
+        int x = 0;
+        int y = 1;
+        int z = 2;
+        double ra = sq(a);
+        double rb = sq(b);
+        double rc = sq(c);
+        double rd = sq(d);
+        double x0 = E(y, z, a, b, c, d, ra, rb, rc, rd, uvw);
+        double y0 = E(z, x, a, b, c, d, ra, rb, rc, rd, uvw);
+        double z0 = E(x, y, a, b, c, d, ra, rb, rc, rd, uvw);
+
+        double radius = System.Math.Sqrt(sq(new Point(a.x - x0, a.y - y0, a.z - z0)));
+        return new Sphere(new Point(x0, y0, z0), radius);
+    }
+}
+
